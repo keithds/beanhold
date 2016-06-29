@@ -19,3 +19,13 @@ libraryDependencies ++= Seq(
 )
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
+
+enablePlugins(JavaAppPackaging)
+
+// Docker settings
+dockerBaseImage := "java"
+maintainer:= "Rob Kewley"
+//dockerExposedPorts in Docker := Seq(9000)
+dockerExposedVolumes := Seq()
+dockerUpdateLatest := true
+//dockerRepository := Some("dregistry:5000/dmf")

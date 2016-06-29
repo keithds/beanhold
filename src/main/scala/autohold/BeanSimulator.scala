@@ -4,12 +4,14 @@ import java.time.Duration;
 import devsmodel._
 import akka.actor._
 
+import scala.collection.immutable.ListSet
+
 case class Beans(beans: List[LPLoc], i: Int)
 case class BeanProperties(computationGrain: ComputationGrain, location: LPLoc, neigborDistance: Int) extends ModelProperties
 case class BeanOutData(beanNumber: LPLoc, destination: LPLoc)
 case class InitialBeanJumpData()
 
-case class BeansState(beans: DynamicStateVariable[List[autohold.LPLoc]]) extends ModelState
+case class BeansState(beans: DynamicStateVariable[ListSet[autohold.LPLoc]]) extends ModelState
 case class BeansStateManager(initialState: BeansState) extends ModelStateManager[BeansState](initialState) {
   val beansState = buildSimEntityState(initialState.beans, "beans");
   override val stateVariables = List(beansState)

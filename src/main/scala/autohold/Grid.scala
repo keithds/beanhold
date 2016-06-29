@@ -5,7 +5,7 @@ package autohold
  * @param x
  * @param y
  */
-case class LPLoc(x: Int, y: Int) {
+case class LPLoc(x: Int, y: Int) extends Serializable {
   override def toString: String = "(" + x + ", " + y + ")"
   override def equals(otherLocation: Any): Boolean = {
     otherLocation match {

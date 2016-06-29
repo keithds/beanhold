@@ -5,6 +5,7 @@ import java.time.Duration
 import akka.actor._
 import akka.remote.RemoteScope
 import devsmodel._
+import scala.collection.immutable.ListSet
 
 class BeansCoordinator(i: Duration, randActor: ActorRef, override val simLogger: ActorRef) extends ModelCoordinator(i, randActor, simLogger) {
     debug = true
@@ -12,7 +13,7 @@ class BeansCoordinator(i: Duration, randActor: ActorRef, override val simLogger:
       val actors = for (j <- 0 to PholdParameters.gridSizeY - 1) yield {
         val location = LPLoc(i, j)
         val lpProperties = new BeanProperties(PholdParameters.defaultComputationGrain, location, PholdParameters.neighborDistance)
-        val lpState = BeansState(DynamicStateVariable(initialTime, List()))
+        val lpState = BeansState(DynamicStateVariable(initialTime, ListSet()))
         val initialBeanJump = new InternalEvent(initialTime, InitialBeanJumpData())
         val initialEvents = InitialEvents(List(initialBeanJump))
 
@@ -47,7 +48,8 @@ class BeansCoordinator(i: Duration, randActor: ActorRef, override val simLogger:
    *
    * @param externalEvent  The external event to be handled
    */
-  override def handleExternalEvent(externalEvent: ExternalEvent[_]): Unit = {}
+
+  override def handleExternalEvent[E <: Serializable](externalEvent: ExternalEvent[E]): Unit = {}
 
   /**
    * This is a very important abstract method that must be overridden by any subclasses of ModelCoordinator.  This function

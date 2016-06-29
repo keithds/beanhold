@@ -2,6 +2,8 @@ package autohold
 
 import java.time.Duration
 
+import scala.collection.immutable.ListSet
+
 
 trait BeansModelImpl { this: BeansSimulator#BeansModel =>
   setDebug(true)
@@ -57,7 +59,8 @@ trait BeansModelImpl { this: BeansSimulator#BeansModel =>
 
   def handleLPLoc(beanIn: LPLoc, t: Duration): Boolean = {
     logMessage("Handling LPLoc. Bean " + beanIn + " jumped in")
-    state.beansState.setState(beanIn :: state.beansState.getLatestState, t)
+//    state.beansState.setState(beanIn :: state.beansState.getLatestState, t)
+    state.beansState.setState(state.beansState.getLatestState + beanIn, t)
     val destination = getDestination(properties.location)
     val start = (System.currentTimeMillis() - BeansSimulation.startTime)/1000.0
     PholdParameters.jumpCount ! JumpCount(0)
