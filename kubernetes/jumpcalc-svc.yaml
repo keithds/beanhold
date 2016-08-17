@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jumpcalc-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: jumpcalc
+  ports:
+  - name: "akka"
+    port: 2554
+    protocol: TCP
+    targetPort: 2554

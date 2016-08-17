@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package beanmessages;
+
+message PholdParameters {
+    int32 gridSizeX = 1;
+    int32 gridSizeY = 2;
+    int32 neighborDistance = 3;
+    int32 jumpCountDelayMillis = 4;
+    int32 maxTimeIncrement = 5;
+    int32 randomStopTime = 6;
+    bool random = 7;
+    bool distributed = 8;
+    int32 distributedWorkers = 9;
+    bool jumpService = 10;
+    int32 jumpWorkers = 11;
+}
+
+message JumpCount {
+    int64 jumpCount = 1;
+}
+
+/**
+ * Class to hold the x,y location of a bean
+ * @param x
+ * @param y
+ */
+message LPLoc {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+message Beans {
+    string timeInState = 1;
+    repeated LPLoc beans = 2;
+}
+
+message BeanProperties {
+    PholdParameters params = 1;
+    LPLoc location = 2;
+}
+
+message BeanOutData {
+    LPLoc beanNumber = 1;
+    LPLoc destination = 2;
+}
+
+message InitialBeanJumpData {}
+
+message CalculateJump {
+    int32 maxJumpMillis = 1;
+    double randomDouble = 2;
+}
+
+message JumpVal {
+    int32 jumpInMillis = 1;
+}
+
+
+

@@ -1,0 +1,30 @@
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: remote-actor-deployment
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: remote-actor
+    spec:
+      containers:
+      - name: remote-actor
+        image: 944338264176.dkr.ecr.us-east-1.amazonaws.com/dmf:beanhold
+        imagePullPolicy: Always
+        env:
+          - name: BEAN_IP
+            value: "bean-service"
+          - name: REMOTE
+            value: "true"
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        ports:
+        - containerPort: 2552
+          protocol: TCP

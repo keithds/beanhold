@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: jumpcalc-deployment
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jumpcalc
+    spec:
+      containers:
+      - name: jumpcalculate
+        image: 944338264176.dkr.ecr.us-east-1.amazonaws.com/dmf:jumpcalculate
+        imagePullPolicy: Always
+        env:
+          - name: BEAN_IP
+            value: "bean-service"
+          - name: JUMPWORKERS
+            value: "1"
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        ports:
+        - containerPort: 2554
+          protocol: TCP

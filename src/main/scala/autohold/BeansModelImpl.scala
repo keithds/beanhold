@@ -2,81 +2,96 @@ package autohold
 
 import java.time.Duration
 
-import scala.collection.immutable.ListSet
+
+import akka.actor.Actor.Receive
+import beanmessages.Beanhold._
+import scala.collection.JavaConversions._
 
 
 trait BeansModelImpl { this: BeansSimulator#BeansModel =>
   setDebug(true)
+  val pHoldParameters = properties.getParams
 
-  def getDestination(loc: LPLoc) = PholdParameters.random match {
+  val gridData = for (i <- 0 to pHoldParameters.getGridSizeX - 1) yield {
+    val locations = for (j <- 0 to pHoldParameters.getGridSizeY - 1) yield {
+      BeansSimulator.buildLPLoc(i, j)
+    }
+    locations.toVector
+  }
+
+  val grid = new Grid[LPLoc](gridData.toVector)
+
+  def getDestination(loc: LPLoc) = pHoldParameters.getRandom match {
     case true => randomJumpDestination(loc)
     case false => deterministicJumpDesination(loc)
   }
 
   def deterministicJumpDesination(loc: LPLoc): LPLoc = {
     loc match {
-      case p1 if p1.x == PholdParameters.gridSizeX - 1 && p1.y == PholdParameters.gridSizeY - 1 => loc
+      case p1 if p1.getX == pHoldParameters.getGridSizeX - 1 && p1.getY == pHoldParameters.getGridSizeY - 1 => loc
       case p2 =>
-        LPLoc(Math.min(p2.x + 1, PholdParameters.gridSizeX - 1) , Math.min(p2.y + 1, PholdParameters.gridSizeY - 1))
+        BeansSimulator.buildLPLoc(Math.min(p2.getX + 1, pHoldParameters.getGridSizeX - 1) , Math.min(p2.getY + 1, pHoldParameters.getGridSizeY - 1))
     }
   }
 
   def randomJumpDestination(loc: LPLoc): LPLoc = {
-    val neighbors = PholdParameters.getNeighbors(properties.location)
+    val neighbors = grid.getNeighbors(properties.getLocation, pHoldParameters.getNeighborDistance)
     val index = random.nextInt(neighbors.size)
     neighbors(index)
   }
 
-  def timeIncrement(): Duration = PholdParameters.random match {
+  def timeIncrement(): Duration = pHoldParameters.getRandom match {
     case true => randomTimeIncrement
     case false => deterministicTimeIncrement
   }
 
   def deterministicTimeIncrement = Duration.ofSeconds(1)
 
-  def randomTimeIncrement = Duration.ofSeconds(random.nextInt(PholdParameters.maxTimeIncrement) + 1)
-
-  def delay(millis: Long) = {
-    val count: Int = millis.toInt * 1333333
-    for (x <- 1 to count) {
-      val y = x + 1
-    }
-  }
+  def randomTimeIncrement = Duration.ofSeconds(random.nextInt(pHoldParameters.getMaxTimeIncrement) + 1)
 
 
   def handleInitialBeanJumpData(initialBeanJumpData: InitialBeanJumpData, t: Duration): Boolean = {
-    addOutput(BeanOutData(properties.location, getDestination(properties.location)), t.plus(Duration.ofSeconds(1)))
+    addOutput(BeansSimulator.buildBeanOutData(properties.getLocation, getDestination(properties.getLocation)), t.plus(Duration.ofSeconds(1)))
     true
   }
   def handleBeanOutData(beanOutData: BeanOutData, t: Duration): Boolean = {
     addOutput(beanOutData, t)
-    logMessage("Handling BeanOutData.  Removing the following bean " + beanOutData.beanNumber)
-    val newBeanList = state.beansState.getLatestState.filterNot(bean => bean == beanOutData.beanNumber)
-    state.beansState.setState(newBeanList, t)
+    logMessage("Handling BeanOutData.  Removing the following bean " + BeansSimulator.locToString(beanOutData.getBeanNumber))
+    val newBeanList = state.beansState.getLatestState.getBeansList.filterNot(bean => BeansSimulator.locEquals(bean, beanOutData.getBeanNumber))
+    val newBeanState = BeansSimulator.buildBeans(newBeanList)
+    state.beansState.setState(newBeanState, t)
     logMessage("Bean inventory " + state.beansState.getLatestState)
     true
   }
 
+
+  var currentBeanIn: LPLoc = properties.getLocation
+  var handleLPLocTime = currentTime
   def handleLPLoc(beanIn: LPLoc, t: Duration): Boolean = {
     logMessage("Handling LPLoc. Bean " + beanIn + " jumped in")
 //    state.beansState.setState(beanIn :: state.beansState.getLatestState, t)
-    state.beansState.setState(state.beansState.getLatestState + beanIn, t)
-    val destination = getDestination(properties.location)
-    val start = (System.currentTimeMillis() - BeansSimulation.startTime)/1000.0
-    PholdParameters.jumpCount ! JumpCount(0)
-    println(properties.location + " with thread " + Thread.currentThread().getId + " going to delay at " + start)
-    delay(PholdParameters.defaultComputationGrain.millis)
-    val back = (System.currentTimeMillis() - BeansSimulation.startTime)/1000.0
-    println(properties.location + " with thread " + Thread.currentThread().getId + " is back at " + back)
-    val beanOutData = BeanOutData(beanIn, destination)
-    val ti = timeIncrement()
-    logMessage("Time increment is " + ti.getSeconds)
-    addEvent(beanOutData, t.plus(ti))
-    true
+    currentBeanIn = beanIn
+    handleLPLocTime = t
+    jumpCalculator.tell(BeansSimulator.buildCalculateJump(pHoldParameters.getJumpCountDelayMillis, random.nextDouble()), sim)
+    false
   }
 
   override def modelPreTerminate = {
-    logMessage("Bean inventory " + state.beansState.getLatestState)
+    logMessage("Bean inventory  " + state.beansState.getLatestState)
+  }
+
+  override def processStateTransitionMessages: Receive = {
+    case jv: JumpVal =>
+      val newBeanList = currentBeanIn :: (state.beansState.getLatestState.getBeansList).toList
+      val newBeanState = BeansSimulator.buildBeans(newBeanList)
+      state.beansState.setState(newBeanState, handleLPLocTime)
+      val destination = getDestination(properties.getLocation)
+      jumpCount ! BeansSimulator.buildJumpCount(0)
+      val beanOutData = BeansSimulator.buildBeanOutData(currentBeanIn, destination)
+      val ti = timeIncrement()
+      logMessage("Time increment is " + ti.getSeconds)
+      addEvent(beanOutData, handleLPLocTime.plus(ti))
+      externalTransitionDone(handleLPLocTime)
   }
 
 }
