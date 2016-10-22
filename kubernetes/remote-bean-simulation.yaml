@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: beanhold
-          image: 944338264176.dkr.ecr.us-east-1.amazonaws.com/dmf:beanhold
+          image: dregistry.d-a-s.com/beanhold
           imagePullPolicy: Always
           env:
           - name: DISTRIBUTED
@@ -28,3 +28,5 @@ spec:
           ports:
           - containerPort: 2552
             protocol: TCP
+      imagePullSecrets:
+        - name: dmfregistrykey

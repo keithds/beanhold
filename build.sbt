@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % "2.4.7",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "junit" % "junit" % "4.12" % "test",
-  "com.google.protobuf" % "protobuf-java" % "3.0.0-beta-3",
+  "com.google.protobuf" % "protobuf-java" % "3.0.2",
   "com.novocode" % "junit-interface" % "0.11" % "test"
 )
 
@@ -24,7 +24,7 @@ import xsbti.compile
 
 PB.protobufSettings
 
-version in PB.protobufConfig := "3.0.0-beta-3"
+version in PB.protobufConfig := "3.0.2"
 
 compileOrder := CompileOrder.JavaThenScala
 

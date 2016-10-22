@@ -51,14 +51,15 @@ trait BeansModelImpl { this: BeansSimulator#BeansModel =>
 
 
   def handleInitialBeanJumpData(initialBeanJumpData: InitialBeanJumpData, t: Duration): Boolean = {
-    addOutput(BeansSimulator.buildBeanOutData(properties.getLocation, getDestination(properties.getLocation)), t.plus(Duration.ofSeconds(1)))
+    //addOutput(BeansSimulator.buildBeanOutData(properties.getLocation, getDestination(properties.getLocation)), t.plus(Duration.ofSeconds(1)))
+    addOutput(BeanOutData(properties.getLocation, getDestination(properties.getLocation)), t.plus(Duration.ofSeconds(1)))
     true
   }
   def handleBeanOutData(beanOutData: BeanOutData, t: Duration): Boolean = {
     addOutput(beanOutData, t)
-    logMessage("Handling BeanOutData.  Removing the following bean " + BeansSimulator.locToString(beanOutData.getBeanNumber))
-    val newBeanList = state.beansState.getLatestState.getBeansList.filterNot(bean => BeansSimulator.locEquals(bean, beanOutData.getBeanNumber))
-    val newBeanState = BeansSimulator.buildBeans(newBeanList)
+    logMessage("Handling BeanOutData.  Removing the following bean " + BeansSimulator.locToString(beanOutData.beanNumber))
+    val newBeanList = state.beansState.getLatestState.beans.filterNot(bean => BeansSimulator.locEquals(bean, beanOutData.beanNumber))
+    val newBeanState = BeansHere(newBeanList, t)//BeansSimulator.buildBeans(newBeanList)
     state.beansState.setState(newBeanState, t)
     logMessage("Bean inventory " + state.beansState.getLatestState)
     true
@@ -82,12 +83,13 @@ trait BeansModelImpl { this: BeansSimulator#BeansModel =>
 
   override def processStateTransitionMessages: Receive = {
     case jv: JumpVal =>
-      val newBeanList = currentBeanIn :: (state.beansState.getLatestState.getBeansList).toList
-      val newBeanState = BeansSimulator.buildBeans(newBeanList)
+      val newBeanList = currentBeanIn :: (state.beansState.getLatestState.beans).toList
+      val newBeanState = BeansHere(newBeanList, currentTime)//BeansSimulator.buildBeans(newBeanList)
       state.beansState.setState(newBeanState, handleLPLocTime)
       val destination = getDestination(properties.getLocation)
       jumpCount ! BeansSimulator.buildJumpCount(0)
-      val beanOutData = BeansSimulator.buildBeanOutData(currentBeanIn, destination)
+      //val beanOutData = BeansSimulator.buildBeanOutData(currentBeanIn, destination)
+      val beanOutData = BeanOutData(currentBeanIn, destination)
       val ti = timeIncrement()
       logMessage("Time increment is " + ti.getSeconds)
       addEvent(beanOutData, handleLPLocTime.plus(ti))

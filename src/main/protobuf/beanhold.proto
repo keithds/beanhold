@@ -40,10 +40,12 @@ message BeanProperties {
     LPLoc location = 2;
 }
 
+/*
 message BeanOutData {
     LPLoc beanNumber = 1;
     LPLoc destination = 2;
 }
+*/
 
 message InitialBeanJumpData {}
 

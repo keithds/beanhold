@@ -35,7 +35,7 @@ class BeansCoordinator(i: Duration, remoteWorkersListOption: Option[List[Address
       val actors = for (j <- 0 to pHoldParameters.getGridSizeY - 1) yield {
         val location = BeansSimulator.buildLPLoc(i, j)
         val lpProperties = BeansSimulator.buildBeanProperties(pHoldParameters, location)
-        val lpState = BeansSimulator.buildBeans(initialTime, List())
+        val lpState = BeansHere(List(), initialTime)//BeansSimulator.buildBeans(initialTime, List())
         val initialBeanJump = ModelSimulator.buildDEVSEventData(DEVSEventData.EventType.INTERNAL, initialTime, BeansSimulator.buildInitialBeanJumpData)
         val initialEvents = ModelSimulator.buildInitialEvents(Seq(initialBeanJump))
 
@@ -79,7 +79,7 @@ class BeansCoordinator(i: Duration, remoteWorkersListOption: Option[List[Address
    * @param externalEvent  The external event to be handled
    */
 
-  override def handleExternalEvent[E <: GeneratedMessage](externalEvent: ExternalEvent[E]): Unit = {}
+  override def handleExternalEvent(externalEvent: ExternalEvent[_ <: java.io.Serializable]): Unit = {}
 
   /**
    * This is a very important abstract method that must be overridden by any subclasses of ModelCoordinator.  This function
@@ -97,12 +97,12 @@ class BeansCoordinator(i: Duration, remoteWorkersListOption: Option[List[Address
     * @param eventSender  The subordinate model from which the output is recieved
    * @param output  The output message received
    */
-  override def handleOutputEvent(eventSender: ActorRef, output: OutputMessage): Unit = {
-    convertOutput(output.getOutput) match {
-      case b: BeanOutData =>
-          val t = Duration.parse(output.getTimeString)
-          val receiveActor: ActorRef = grid.itemAt(b.getDestination.getX, b.getDestination.getY)
-          sendEventMessage(b.getBeanNumber, t, receiveActor)
-    }
+  override def handleOutputEvent(eventSender: ActorRef, output: OutputEvent[_ <: java.io.Serializable]): Unit = {
+    output.eventData.asInstanceOf[java.io.Serializable] match {
+          case b: BeanOutData =>
+            val receiveActor: ActorRef = grid.itemAt (b.destination.getX, b.destination.getY)
+            sendEventMessage (ExternalEvent (output.executionTime, b.beanNumber), receiveActor)
+        }
+
   }
 }
