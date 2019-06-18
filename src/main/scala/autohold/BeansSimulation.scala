@@ -229,7 +229,7 @@ class BeanSimulation(val remoteWorkersListOption: Option[List[Address]]) extends
 
   override def postStop() = {
     // This allows program to exit
-    context.system.shutdown()
+    context.system.terminate()
     val seconds = (System.currentTimeMillis() - startTime)/1000.0
     println("Run time is " + seconds)
   }

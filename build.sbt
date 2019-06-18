@@ -2,35 +2,33 @@ organization := "DSE"
 
 name := """beanhold"""
 
-version := "1.0"
+version := "1.1"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.7"
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "com.typesafe.akka" %% "akka-remote" % "2.4.7",
-  "com.typesafe.akka" %% "akka-actor" % "2.4.7",
-  "com.typesafe.akka" %% "akka-testkit" % "2.4.7",
-  "org.scalatest" %% "scalatest" % "2.2.6" % "test",
+  "com.typesafe.akka" %% "akka-remote" % "2.5.17",
+  "com.typesafe.akka" %% "akka-actor" % "2.5.17",
+  "com.typesafe.akka" %% "akka-testkit" % "2.5.17",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "junit" % "junit" % "4.12" % "test",
-  "com.google.protobuf" % "protobuf-java" % "3.0.2",
+  "com.google.protobuf" % "protobuf-java" % "3.6.1",
   "com.novocode" % "junit-interface" % "0.11" % "test"
 )
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
 
-import sbtprotobuf.{ProtobufPlugin=>PB}
 import xsbti.compile
 
-PB.protobufSettings
+enablePlugins(ProtobufPlugin, JavaAppPackaging)
 
-version in PB.protobufConfig := "3.0.2"
+version in ProtobufConfig := "3.6.1"
 
 compileOrder := CompileOrder.JavaThenScala
 
 compileOrder in Docker := compileOrder.value
 
-enablePlugins(JavaAppPackaging)
 
 // Docker settings
 dockerBaseImage := "anapsix/alpine-java"
